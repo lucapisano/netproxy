@@ -14,7 +14,7 @@ namespace NetProxy
         /// Milliseconds
         /// </summary>
         public int ConnectionTimeout { get; set; } = (4 * 60 * 1000);
-
+        private UdpClient localServer;
         public async Task Start(string remoteServerHostNameOrAddress, ushort remoteServerPort, ushort localPort, string? localIp = null)
         {
             var connections = new ConcurrentDictionary<IPEndPoint, UdpConnection>();
@@ -23,7 +23,7 @@ namespace NetProxy
             var ips = await Dns.GetHostAddressesAsync(remoteServerHostNameOrAddress).ConfigureAwait(false);
             var remoteServerEndPoint = new IPEndPoint(ips[0], remoteServerPort);
 
-            var localServer = new UdpClient(AddressFamily.InterNetworkV6);
+            localServer = new UdpClient(AddressFamily.InterNetworkV6);
             localServer.Client.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
             IPAddress localIpAddress = string.IsNullOrEmpty(localIp) ? IPAddress.IPv6Any : IPAddress.Parse(localIp);
             localServer.Client.Bind(new IPEndPoint(localIpAddress, localPort));
@@ -66,6 +66,10 @@ namespace NetProxy
                     Console.WriteLine($"an exception occurred on receiving a client datagram: {ex}");
                 }
             }
+        }
+        public async Task Stop()
+        {
+            localServer?.Close();
         }
     }
 

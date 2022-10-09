@@ -17,13 +17,13 @@ namespace NetProxy
         /// Milliseconds
         /// </summary>
         public int ConnectionTimeout { get; set; } = (4 * 60 * 1000);
-
+        private TcpListener localServer;
         public async Task Start(string remoteServerHostNameOrAddress, ushort remoteServerPort, ushort localPort, string? localIp)
         {
             var connections = new ConcurrentBag<TcpConnection>();
 
             IPAddress localIpAddress = string.IsNullOrEmpty(localIp) ? IPAddress.IPv6Any : IPAddress.Parse(localIp);
-            var localServer = new TcpListener(new IPEndPoint(localIpAddress, localPort));
+            localServer = new TcpListener(new IPEndPoint(localIpAddress, localPort));
             localServer.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
             localServer.Start();
 
@@ -74,6 +74,11 @@ namespace NetProxy
                     Console.ResetColor();
                 }
             }
+        }
+
+        public async Task Stop()
+        {
+            localServer?.Stop();
         }
     }
 
